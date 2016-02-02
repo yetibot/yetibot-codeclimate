@@ -2,6 +2,7 @@
   (:require
     [taoensso.timbre :refer [info warn]]
     [tentacles
+     [core :as tc]
      [search :as search]
      [pulls :as pulls]
      [issues :as issues]
