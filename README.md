@@ -19,12 +19,18 @@ your own; [it's quite easy](http://blog.codeclimate.com/blog/2015/07/07/build-yo
 ## Usage
 
 0. Add yetibot-codeclimate dependency to your Yetibot install.
-0. Create a webhook in GitHub's repository settings to point to your Yetibot.
-   The path should be:
+
+0. Create a webhook in GitHub's repository settings to point to your Yetibot. At
+   a minimum, send all `push` events, or just send Everything. Yetibot
+   CodeClimate only listens to the events it needs. The webhook url should be:
 
    ```
    http://$YOUR_YETIBOT:3000/codeclimate/webhook
    ```
+
+0. Make sure your Yetibot is
+   [configured](https://github.com/devth/yetibot/blob/33803bdf159c33fcfbfb55dd13a74963163a3fee/config/config-sample.edn#L49-L53)
+   with a GitHub token of an account that has access to your repo.
 
 ## Config
 
