@@ -42,8 +42,9 @@ stored in this directory.
    :results-path "./codeclimate"}}
 ```
 
-Make sure to set Yetibot's `url`. Yetibot CodeClimate uses this to post the
-correct target_url on each commit it analyzes, which GitHub exposes in their UI.
+Make sure to set Yetibot's `:url` configuration. Yetibot CodeClimate uses this
+to post the correct target_url on each commit it analyzes, which GitHub exposes
+in their UI.
 
 If you are using Docker Machine, you also must configure Yetibot's Docker
 settings so CodeClimate uses the correct Docker Machine vars:
