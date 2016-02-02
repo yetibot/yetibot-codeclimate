@@ -10,4 +10,3 @@
 
 (cmd-hook #"codeclimate"
   _ codeclimate-cmd)
-

@@ -54,10 +54,10 @@ settings so CodeClimate uses the correct Docker Machine vars:
 :yetibot
 {:url "http://YOUR_YETIBOT:3000"
  :docker
-  {:machine {:DOCKER_TLS_VERIFY "1"
-             :DOCKER_HOST "tcp://1.2.3.4:2376"
-             :DOCKER_CERT_PATH "/Users/foo/.docker/machine/machines/default"
-             :DOCKER_MACHINE_NAME "default"}}}
+ {:machine {:DOCKER_TLS_VERIFY "1"
+            :DOCKER_HOST "tcp://1.2.3.4:2376"
+            :DOCKER_CERT_PATH "/Users/foo/.docker/machine/machines/default"
+            :DOCKER_MACHINE_NAME "default"}}}
 ```
 
 Find these settings using `docker-machine env default` where `default` is the
