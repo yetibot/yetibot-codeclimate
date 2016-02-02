@@ -23,7 +23,7 @@
         owner-name (:name owner)
         commits (:commits payload)]
     (info "github payload keys:" (keys payload))
-    (info "owner-name:" owner-name)
+    (info owner-name repo-name)
     (dorun
       ;; analyze each commit in parallel
       (for [commit commits]

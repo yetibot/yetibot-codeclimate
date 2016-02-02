@@ -23,5 +23,5 @@
 (defn auth [] {:oauth-token (:token (config))})
 
 (defn create-status [owner repo-name sha opts]
-  #_(info "create-status" owner repo-name sha opts)
+  (info "create-status" owner repo-name sha opts)
   (r/create-status owner repo-name sha (merge (auth) opts)))
