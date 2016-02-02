@@ -25,15 +25,15 @@ http://$YOUR_YETIBOT:3000/codeclimate/webhook
 
 ## Config
 
-**Workspace**: You can optionally set a workspace path. This is where Yetibot will checkout
-repos to run CodeClimate analysis on. It's important to note that if you're
-using Docker Machine, this location must be inside your Users directory (on
-OSX). If not set, it defaults to "/tmp/cc", which works on Linux where you don't
-need Docker Machine.
+**workspace-path**: You can optionally set a workspace path. This is where
+Yetibot will checkout repos to run CodeClimate analysis on. It's important to
+note that if you're using Docker Machine, this location must be inside your
+Users directory (on OSX). If not set, it defaults to "/tmp/cc", which works on
+Linux where you don't need Docker Machine.
 
-**Results**: You can optionally set a path were linting results will be stored.
-The default is "./codeclimate/". Yetibot serves results from JSON files stored
-in this directory.
+**results-path**: You can optionally set a path were linting results will be
+stored.  The default is "./codeclimate/". Yetibot serves results from JSON files
+stored in this directory.
 
 ```edn
 ;; merge this into config/config.edn in your yetibot installation
