@@ -1,5 +1,7 @@
 # yetibot-codeclimate
 
+[![Clojars Project](https://img.shields.io/clojars/v/yetibot-codeclimate.svg)](https://clojars.org/yetibot-codeclimate)
+
 A Yetibot plugin to integrate with CodeClimate. **Requires Docker on the host.**
 
 - [Official engines](https://docs.codeclimate.com/docs/list-of-engines)
@@ -16,12 +18,13 @@ your own; [it's quite easy](http://blog.codeclimate.com/blog/2015/07/07/build-yo
 
 ## Usage
 
-Create a webhook in GitHub's repository settings to point to your Yetibot. The
-path should be:
+0. Add yetibot-codeclimate dependency to your Yetibot install.
+0. Create a webhook in GitHub's repository settings to point to your Yetibot.
+   The path should be:
 
-```
-http://$YOUR_YETIBOT:3000/codeclimate/webhook
-```
+   ```
+   http://$YOUR_YETIBOT:3000/codeclimate/webhook
+   ```
 
 ## Config
 
