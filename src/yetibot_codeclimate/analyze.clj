@@ -89,6 +89,14 @@
           item)
         ))))
 
+(defn str-to-json [s]
+  (try
+    (json/parse-string s)
+    (catch Exception e
+      (error "Error parsing json" e)
+      (info s)
+      (throw e))))
+
 (defn run-codeclimate! [sha owner repo-name git-url]
   (try
     (let [ws (workspace repo-name sha)]
@@ -106,7 +114,7 @@
                        :env (stringify-keys (docker-machine-config)))
             cc-docker-output (sh/stream-to-string d :out)
             cc-annotated (->> cc-docker-output
-                              json/parse-string
+                              str-to-json
                               keywordize-keys
                               (annotate-cc-with-lines owner repo-name sha))
             cc-err (sh/stream-to-string d :err)]
