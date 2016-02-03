@@ -108,12 +108,17 @@
             cc-annotated (->> cc-docker-output
                               json/parse-string
                               keywordize-keys
-                              (annotate-cc-with-lines owner repo-name sha))]
+                              (annotate-cc-with-lines owner repo-name sha))
+            cc-err (sh/stream-to-string d :err)]
         (store-analysis! owner repo-name sha cc-annotated)
         (info "CodeClimate out: " cc-docker-output)
-        (info "CodeClimate err:" (sh/stream-to-string d :err))
+        (info "CodeClimate err:" cc-err)
         (cleanup! sha repo-name)
+        (if (s/blank? cc-err)
+          cc-annotated
+          {:error cc-err})
+
         cc-annotated))
     (catch Exception e
       (error "Error running code climate:" e)
-      {:error e})))
+      {:error (.getMessage e)})))

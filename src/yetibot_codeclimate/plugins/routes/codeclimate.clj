@@ -27,7 +27,7 @@
     (dorun
       ;; analyze each commit in parallel
       (for [commit commits]
-        (do ;; future
+        (future
           (let [sha (:id commit)
                 target-url (cc-url owner-name repo-name sha)
                 create-status (partial gh/create-status owner-name repo-name sha)
@@ -35,22 +35,22 @@
             (info "create status")
             (create-status (merge cs-opts {:state "pending"
                                            :description "Yetibot is analyzing your code with CodeClimate"}))
-            (let [cc-json (run-codeclimate! sha owner-name repo-name (:clone_url repo))]
-              ;; using the cc-json post the analysis status to gh
+            (let [cc-results (run-codeclimate! sha owner-name repo-name (:clone_url repo))]
+              ;; using the cc-results post the analysis status to gh
               (cond
                 ;; error
-                (:error cc-json) (create-status
-                                   (merge cs-opts {:state "error"
-                                                   :description (.getMessage (:error cc-json))}))
+                (:error cc-results) (create-status
+                                      (merge cs-opts {:state "error"
+                                                      :description (:error cc-results)}))
                 ;; success
-                (empty? cc-json) (create-status
-                                   (merge cs-opts {:state "success"
-                                                   :description "Yetibot approved!"}))
+                (empty? cc-results) (create-status
+                                      (merge cs-opts {:state "success"
+                                                      :description "Yetibot approved!"}))
                 ;; failure
                 :else (create-status
                         (merge cs-opts {:state "failure"
                                         :description "Yetibot detected linting problems from CodeClimate"}))
-                                 ))))))
+                ))))))
     "Analyzing"))
 
 (def handled-events {"push" #'handle-push-event})
