@@ -61,10 +61,13 @@
     (spit file cc-str)))
 
 (defn get-analysis!
+  "Returns null if analysis doesn't exist yet"
   [owner repo-name sha]
-  (let [dir (str (results-path) "/" owner "/" repo-name)
-        file (str dir "/" sha ".json")]
-    (map keywordize-keys (json/parse-string (slurp file)))))
+  (try
+    (let [dir (str (results-path) "/" owner "/" repo-name)
+          file (str dir "/" sha ".json")]
+      (map keywordize-keys (json/parse-string (slurp file))))
+    (catch Exception e nil)))
 
 (defn read-nth-line
   "Read line-number from the given text file. The first line has the number 1."

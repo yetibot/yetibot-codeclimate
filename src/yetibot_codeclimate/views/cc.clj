@@ -20,24 +20,28 @@
        [:h1 "Yetibot CodeClimate "]
        [:h6.repo-info [:small.lead (str owner "/" repo " at " sha)]]
 
-       (when (empty? cc-json)
-         [:div.cc-item.success
-          [:div.cc-content
-           "Looks good, no problems detected!"]])
 
-       (for [{:keys [line engine_name content categories description location]} cc-json]
-         (let [line-number (-> location :positions :begin :line)
-               column-number (-> location :positions :begin :column)]
-           [:div.cc-item
-            [:div.cc-content
-             [:div.row
-              [:div.col-md-2
-               [:span.label.label-default
-                {:title (:body content)  :data-toggle "tooltip"}
-                engine_name]
-               " "
-               [:span.label.label-warning
-                (s/join " " (map s/lower-case categories))] ]
+       (if cc-json
+
+         (do
+           (when (empty? cc-json)
+             [:div.cc-item.success
+              [:div.cc-content
+               "Looks good, no problems detected!"]])
+
+           (for [{:keys [line engine_name content categories description location]} cc-json]
+             (let [line-number (-> location :positions :begin :line)
+                   column-number (-> location :positions :begin :column)]
+               [:div.cc-item
+                [:div.cc-content
+                 [:div.row
+                  [:div.col-md-2
+                   [:span.label.label-default
+                    {:title (:body content)  :data-toggle "tooltip"}
+                    engine_name]
+                   " "
+                   [:span.label.label-warning
+                    (s/join " " (map s/lower-case categories))] ]
 
               [:div.col-md-10
                [:p description]
@@ -52,7 +56,13 @@
                    (when column-number (str " column " column-number)))
                   ]]]
 
-              ]]]))
+              ]]])))
+
+         ;; file doesn't exist yet
+         [:div.cc-item.pending
+          [:div.cc-content
+           "No analysis found. Refresh at will."]])
+
 
        [:iframe
         {:height "30px",
