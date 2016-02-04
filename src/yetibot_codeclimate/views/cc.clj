@@ -65,7 +65,7 @@
        [:div.row
         [:div.col-lg-4
          [:p.small "Feedback? "
-          (link-to "https://github.com/devth/yetibot-stackstorm/issues"
+          (link-to "https://github.com/devth/yetibot-codeclimate/issues"
                    "Open an issue")]
          ]]
 
