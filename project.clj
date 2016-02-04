@@ -9,5 +9,5 @@
                  :timeout 120000
                  :welcome (println "Welcome to the Yetibot CodeClimate development repl!")}
   :dependencies [[org.clojure/clojure "1.7.0"]
-                 [yetibot.core "0.3.13"]
+                 [yetibot.core "0.3.15"]
                  [me.raynes/conch "0.8.0"]])
