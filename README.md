@@ -10,7 +10,7 @@ A Yetibot plugin to integrate with CodeClimate. **Requires Docker on the host.**
 If a CodeClimate Engine does not yet exist for your language, you can contribute
 your own; [it's quite easy](http://blog.codeclimate.com/blog/2015/07/07/build-your-own-codeclimate-engine/).
 
-![Yetibot CodeClimate](https://dl.dropboxusercontent.com/u/113427/yetibot-codeclimate-ruby.png)
+![Yetibot CodeClimate](https://dl.dropboxusercontent.com/u/113427/yetibot-codeclimate-demo.png)
 
 ## Roadmap
 
