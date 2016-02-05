@@ -5,6 +5,7 @@
     [clojure.walk :refer [stringify-keys keywordize-keys]]
     [taoensso.timbre :refer [error info warn]]
     [clojure.string :as s]
+    [cemerick.url :refer [url]]
     [me.raynes.conch :refer [programs]]
     [me.raynes.conch.low-level :as sh]))
 
@@ -54,6 +55,7 @@
 (defn store-analysis!
   "Write analysis json to disk"
   [owner repo-name sha cc]
+  (info "store analysis!" owner repo-name sha)
   (let [cc-str (json/generate-string cc)
         dir (str (results-path) "/" owner "/" repo-name)
         file (str dir "/" sha ".json")]
@@ -66,7 +68,7 @@
   (try
     (let [dir (str (results-path) "/" owner "/" repo-name)
           file (str dir "/" sha ".json")]
-      (map keywordize-keys (json/parse-string (slurp file))))
+      (keywordize-keys (json/parse-string (slurp file))))
     (catch Exception e nil)))
 
 (defn read-nth-line-with-surrounding
@@ -103,6 +105,9 @@
           (info "skip annotate:" line path item)
           item)))))
 
+(defn extract-base-url [u]
+  (let [u (url u)]
+    (str (:protocol u) "://" (:host u))))
 
 (defn str-to-json [s]
   (try
@@ -112,36 +117,48 @@
       (info s)
       (throw e))))
 
-(defn run-codeclimate! [sha owner repo-name git-url]
-  (try
-    (let [ws (workspace repo-name sha)]
-      (cleanup! sha repo-name)
-      (info (init-repo! sha repo-name git-url))
-      ; run codeclimate via docker
-      (let [d (sh/proc "docker" "run"
-                       "--interactive" "--rm"
-                       "--env" (str "CODE_PATH=" ws)
-                       "--volume"  (str ws ":/code")
-                       "--volume" "/var/run/docker.sock:/var/run/docker.sock"
-                       "--volume" "/tmp/cc:/tmp/cc"
-                       "codeclimate/codeclimate"
-                       "analyze" "-f" "json"
-                       :env (stringify-keys (docker-machine-config)))
-            cc-docker-output (sh/stream-to-string d :out)
-            cc-annotated (->> cc-docker-output
-                              str-to-json
-                              keywordize-keys
-                              (annotate-cc-with-lines owner repo-name sha))
-            cc-err (sh/stream-to-string d :err)]
-        (store-analysis! owner repo-name sha cc-annotated)
-        (info "CodeClimate out: " cc-docker-output)
-        (info "CodeClimate err:" cc-err)
-        (cleanup! sha repo-name)
-        (if (s/blank? cc-err)
-          cc-annotated
-          {:error cc-err})
-
-        cc-annotated))
-    (catch Exception e
-      (error "Error running code climate:" e)
-      {:error (.getMessage e)})))
+;; clojure error handling sucks
+(defn run-codeclimate! [sha owner repo-name git-url commit-url]
+  (let [ws (workspace repo-name sha)
+        cc (try
+             (cleanup! sha repo-name)
+             (info (init-repo! sha repo-name git-url))
+             ; run codeclimate via docker
+             (let [d (sh/proc "docker" "run"
+                              "--interactive" "--rm"
+                              "--env" (str "CODE_PATH=" ws)
+                              "--volume"  (str ws ":/code")
+                              "--volume" "/var/run/docker.sock:/var/run/docker.sock"
+                              "--volume" "/tmp/cc:/tmp/cc"
+                              "codeclimate/codeclimate"
+                              "analyze" "-f" "json"
+                              :env (stringify-keys (docker-machine-config)))
+                   cc-docker-output (sh/stream-to-string d :out)
+                   cc-json (str-to-json cc-docker-output)
+                   cc-annotated (->> cc-json
+                                     keywordize-keys
+                                     (annotate-cc-with-lines owner repo-name sha))
+                   cc-err (sh/stream-to-string d :err)]
+               #_(info "CodeClimate out: " cc-docker-output)
+               (dorun cc-annotated) ;; do all the work before we cleanup
+               (when-not (s/blank? cc-err) (info "CodeClimate err:" cc-err))
+               (cleanup! sha repo-name)
+               (if (s/blank? cc-err)
+                 cc-annotated
+                 {:error cc-err}))
+             (catch Exception e
+               (error "Error running code climate:" e)
+               {:error (.getMessage e)}))
+        results {:commit-url commit-url
+                 :base-url (extract-base-url commit-url)
+                 :sha sha
+                 :owner owner
+                 :repo repo-name
+                 :analysis (if (:error cc) :error cc)}]
+    (info "store analysis")
+    (try
+      (store-analysis! owner repo-name sha results)
+      (catch Exception e
+        (error "Error storing analysis" e)
+        {:error (.getMessage e)}))
+    cc))

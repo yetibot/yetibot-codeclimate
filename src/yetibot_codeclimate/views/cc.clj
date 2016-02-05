@@ -14,63 +14,68 @@
     \newline
     (map-indexed (fn [idx line] (str (+ start-line idx) ": " line)) lines)))
 
+(defn construct-blob-url [base-url owner repo sha path]
+  (str base-url "/" owner "/" repo "/blob/" sha "/" path))
+
+(defn render-items [analysis base-url owner repo sha]
+  (doall (for [{:keys [lines engine_name content categories description location]} analysis]
+           (let [line-number (-> location :positions :begin :line)
+                 column-number (-> location :positions :begin :column)]
+             [:div.cc-item
+              [:div.cc-content
+               [:div.row
+                [:div.col-md-2
+                 [:span.label.label-default
+                  {:title (:body content)  :data-toggle "tooltip"}
+                  engine_name]
+                 " "
+                 [:span.label.label-warning
+                  (s/join " " (map s/lower-case categories))] ]
+
+                [:div.col-md-10
+                 [:p description]
+                 [:pre
+                  (when-let [{:keys [before after line]} lines]
+                    (let [before-count (count before)
+                          after-count (count after)]
+
+                      [:span
+                       (fmt-lines (- line-number before-count) before)
+                       \newline
+                       [:mark line-number ": " line \newline]
+                       (fmt-lines (inc line-number) after)]))
+
+                  [:div.file-location
+                   (let [path (:path location)
+                         path-with-possible-line (str path (when line-number (str "#L" line-number)))]
+                     (link-to
+                       (construct-blob-url base-url owner repo sha path-with-possible-line)
+                       (str
+                         path
+                         (when line-number (str " line " line-number))
+                         (when column-number (str " column " column-number)))))]]]
+                     ]]]))))
+
+
 (defn show-cc [owner repo sha]
-  (let [cc-json (get-analysis! owner repo sha)]
+  (let [results (get-analysis! owner repo sha)]
     (layout
       "CodeClimate"
       (include-css "/codeclimate/main.css" )
       [:div.main.container-fluid
        [:h1 "Yetibot CodeClimate "]
-       [:h6.repo-info [:small.lead (str owner "/" repo " at " sha)]]
 
-       (if cc-json
+       (if-let [{:keys [commit-url base-url sha owner repo analysis]} results]
 
-         (if (empty? cc-json)
-           [:div.cc-item.success
-            [:div.cc-content "Looks good, no problems detected!"]]
-
-           [:div
-            [:p "Found "
-             (let [c (count cc-json)]
-               (str c " " (if (> 1 c) "issues" "issue") "."))]
-
-            (doall (for [{:keys [lines engine_name content categories description location]} cc-json]
-               (let [line-number (-> location :positions :begin :line)
-                     column-number (-> location :positions :begin :column)]
-                 [:div.cc-item
-                  [:div.cc-content
-                   [:div.row
-                    [:div.col-md-2
-                     [:span.label.label-default
-                      {:title (:body content)  :data-toggle "tooltip"}
-                      engine_name]
-                     " "
-                     [:span.label.label-warning
-                      (s/join " " (map s/lower-case categories))] ]
-
-                    [:div.col-md-10
-                     [:p description]
-                     [:pre
-                      (when-let [{:keys [before after line]} lines]
-                        (let [before-count (count before)
-                              after-count (count after)]
-
-                          [:span
-                           (fmt-lines (- line-number before-count) before)
-                           \newline
-                           [:mark line-number ": " line \newline]
-                           (fmt-lines (inc line-number) after)]))
-
-                      [:div.file-location
-                       (str
-                         (:path location)
-                         (when line-number (str " line " line-number))
-                         (when column-number (str " column " column-number)))
-                       ]]]
-
-                    ]]])))
-            ])
-
+         [:div
+          [:h6.repo-info [:small.lead
+                          (str owner "/" repo " at ")
+                          (link-to commit-url (subs sha 0 7))]]
+          (if (empty? analysis)
+            [:div.cc-item.success [:div.cc-content "Looks good, no problems detected!"]]
+            [:div
+             [:p "Found " (let [c (count analysis)] (str c " " (if (> c 1) "issues" "issue") "."))]
+             (render-items analysis base-url owner repo sha)])]
 
          ;; file doesn't exist yet
          [:div.cc-item.pending

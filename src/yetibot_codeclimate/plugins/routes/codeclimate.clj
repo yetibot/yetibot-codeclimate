@@ -35,7 +35,7 @@
             (info "create status")
             (create-status (merge cs-opts {:state "pending"
                                            :description "Yetibot is analyzing your code with CodeClimate"}))
-            (let [cc-results (run-codeclimate! sha owner-name repo-name (:clone_url repo))]
+            (let [cc-results (run-codeclimate! sha owner-name repo-name (:clone_url repo) (:url commit))]
               ;; using the cc-results post the analysis status to gh
               (cond
                 ;; error
