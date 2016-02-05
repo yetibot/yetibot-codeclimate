@@ -9,7 +9,10 @@
     [ring.util.http-response :refer [ok]]
     [hiccup.element :refer [link-to image]]))
 
-
+(defn fmt-lines [start-line lines]
+  (s/join
+    \newline
+    (map-indexed (fn [idx line] (str (+ start-line idx) ": " line)) lines)))
 
 (defn show-cc [owner repo sha]
   (let [cc-json (get-analysis! owner repo sha)]
@@ -20,49 +23,59 @@
        [:h1 "Yetibot CodeClimate "]
        [:h6.repo-info [:small.lead (str owner "/" repo " at " sha)]]
 
-
        (if cc-json
 
-         (do
-           (when (empty? cc-json)
-             [:div.cc-item.success
-              [:div.cc-content
-               "Looks good, no problems detected!"]])
+         (if (empty? cc-json)
+           [:div.cc-item.success
+            [:div.cc-content "Looks good, no problems detected!"]]
 
-           (for [{:keys [line engine_name content categories description location]} cc-json]
-             (let [line-number (-> location :positions :begin :line)
-                   column-number (-> location :positions :begin :column)]
-               [:div.cc-item
-                [:div.cc-content
-                 [:div.row
-                  [:div.col-md-2
-                   [:span.label.label-default
-                    {:title (:body content)  :data-toggle "tooltip"}
-                    engine_name]
-                   " "
-                   [:span.label.label-warning
-                    (s/join " " (map s/lower-case categories))] ]
+           [:div
+            [:p "Found "
+             (let [c (count cc-json)]
+               (str c " " (if (> 1 c) "issues" "issue") "."))]
 
-              [:div.col-md-10
-               [:p description]
-               [:pre
-                (when line
-                  (str line-number ": " line \newline
-                       (apply str (repeat (+ 2 column-number) " ")) "^" \newline))
-                [:div.file-location
-                 (str
-                   (:path location)
-                   (when line-number (str " line " line-number))
-                   (when column-number (str " column " column-number)))
-                  ]]]
+            (doall (for [{:keys [lines engine_name content categories description location]} cc-json]
+               (let [line-number (-> location :positions :begin :line)
+                     column-number (-> location :positions :begin :column)]
+                 [:div.cc-item
+                  [:div.cc-content
+                   [:div.row
+                    [:div.col-md-2
+                     [:span.label.label-default
+                      {:title (:body content)  :data-toggle "tooltip"}
+                      engine_name]
+                     " "
+                     [:span.label.label-warning
+                      (s/join " " (map s/lower-case categories))] ]
 
-              ]]])))
+                    [:div.col-md-10
+                     [:p description]
+                     [:pre
+                      (when-let [{:keys [before after line]} lines]
+                        (let [before-count (count before)
+                              after-count (count after)]
+
+                          [:span
+                           (fmt-lines (- line-number before-count) before)
+                           \newline
+                           [:mark line-number ": " line \newline]
+                           (fmt-lines (inc line-number) after)]))
+
+                      [:div.file-location
+                       (str
+                         (:path location)
+                         (when line-number (str " line " line-number))
+                         (when column-number (str " column " column-number)))
+                       ]]]
+
+                    ]]])))
+            ])
+
 
          ;; file doesn't exist yet
          [:div.cc-item.pending
           [:div.cc-content
            "No analysis found. Refresh at will."]])
-
 
        [:iframe
         {:height "30px",

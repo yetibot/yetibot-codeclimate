@@ -69,11 +69,23 @@
       (map keywordize-keys (json/parse-string (slurp file))))
     (catch Exception e nil)))
 
-(defn read-nth-line
-  "Read line-number from the given text file. The first line has the number 1."
-  [file line-number]
-  (with-open [rdr (clojure.java.io/reader file)]
-    (nth (line-seq rdr) (dec line-number))))
+(defn read-nth-line-with-surrounding
+  "Read line-number from the given text file along with surrounding lines
+   according to `surrouding-count`.
+   Returns:
+     {:before [lines]
+      :line line
+      :after [line]}"
+  [file line-number surrounding-count]
+  (let [start-line (max 1 (- line-number surrounding-count))
+        before-size (- line-number start-line)
+        take-count (+ before-size 1 surrounding-count)]
+    (with-open [rdr (clojure.java.io/reader file)]
+      (let [lines (doall (take take-count (drop (dec start-line) (line-seq rdr))))
+            before (take (- line-number start-line) lines)
+            line (nth lines (- line-number start-line))
+            after (take surrounding-count (drop (inc before-size) lines))]
+        {:before before :line line :after after}))))
 
 (defn annotate-cc-with-lines
   "Looks up the line of code in files referenced by CC analysis and inserts it"
@@ -84,13 +96,13 @@
         (do
           (info "annotate:" line path)
           (let [fullpath (str ws "/" path)
-                line (read-nth-line fullpath line)]
+                lines (read-nth-line-with-surrounding fullpath line 2)]
             (info fullpath)
-            (assoc item :line line)))
+            (assoc item :lines lines)))
         (do
           (info "skip annotate:" line path item)
-          item)
-        ))))
+          item)))))
+
 
 (defn str-to-json [s]
   (try
