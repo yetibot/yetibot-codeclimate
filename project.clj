@@ -1,4 +1,4 @@
-(defproject yetibot-codeclimate "0.1.7"
+(defproject yetibot-codeclimate "0.1.8-SNAPSHOT"
   :description "Integration with CodeClimate"
   :url "https://github.com/devth/yetibot-codeclimate"
   :lein-release {:deploy-via :clojars}
