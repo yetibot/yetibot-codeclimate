@@ -57,6 +57,11 @@
                      ]]]))))
 
 
+(defn analysis-msg [analysis]
+  (if (coll? analysis)
+    [:p (str "Found " (let [c (count analysis)] (str c " " (if (> c 1) "issues" "issue") ".")))]
+    [:div.alert.alert-danger.display-4 "Oops, CodeClimate analysis erred. <br> Everything is on fire. 🔥🔥🔥"]))
+
 (defn show-cc [owner repo sha]
   (let [results (get-analysis! owner repo sha)]
     (layout
@@ -73,9 +78,11 @@
                           (link-to commit-url (subs sha 0 7))]]
           (if (empty? analysis)
             [:div.cc-item.success [:div.cc-content "Looks good, no problems detected!"]]
-            [:div
-             [:p "Found " (let [c (count analysis)] (str c " " (if (> c 1) "issues" "issue") "."))]
-             (render-items analysis base-url owner repo sha)])]
+             ;; analysis can be an error message
+             [:div
+              (analysis-msg analysis)
+              (when (coll? analysis)
+                (render-items analysis base-url owner repo sha))])]
 
          ;; file doesn't exist yet
          [:div.cc-item.pending
