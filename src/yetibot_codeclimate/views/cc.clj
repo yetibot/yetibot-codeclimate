@@ -3,16 +3,20 @@
     [clojure.string :as s]
     [taoensso.timbre :refer [error info warn]]
     [hiccup.page :refer [include-css]]
+    [hiccup.core :refer [h]]
     [yetibot-codeclimate.analyze :refer [run-codeclimate! get-analysis!]]
     [hiccup.element :refer [link-to image]]
     [yetibot.core.webapp.views.common :refer [layout]]
     [ring.util.http-response :refer [ok]]
     [hiccup.element :refer [link-to image]]))
 
+(defn render-line [line]
+  (h line))
+
 (defn fmt-lines [start-line lines]
   (s/join
     \newline
-    (map-indexed (fn [idx line] (str (+ start-line idx) ": " line)) lines)))
+    (map-indexed (fn [idx line] (str (+ start-line idx) ": " (render-line line))) lines)))
 
 (defn construct-blob-url [base-url owner repo sha path]
   (str base-url "/" owner "/" repo "/blob/" sha "/" path))
@@ -43,7 +47,7 @@
                       [:span
                        (fmt-lines (- line-number before-count) before)
                        \newline
-                       [:mark line-number ": " line \newline]
+                       [:mark line-number ": " (render-line line) \newline]
                        (fmt-lines (inc line-number) after)]))
 
                   [:div.file-location
