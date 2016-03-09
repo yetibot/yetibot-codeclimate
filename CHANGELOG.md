@@ -6,6 +6,15 @@ log follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 ## Unreleased
 ### Changed
 
+## [0.1.9] - 2016-03-09
+
+### Changed
+### Removed
+### Fixed
+- Fix new lines format from 0.1.8 in view
+  https://github.com/codeclimate/spec/blob/master/SPEC.md#locations
+
+
 
 ## [0.1.8] - 2016-03-09
 
