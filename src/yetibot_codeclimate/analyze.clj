@@ -93,17 +93,21 @@
   "Looks up the line of code in files referenced by CC analysis and inserts it"
   [owner repo-name sha cc]
   (let [ws (workspace repo-name sha)]
-    (for [{{{{:keys [line]} :begin} :positions path :path} :location :as item} cc]
-      (if line
-        (do
-          (info "annotate:" line path)
-          (let [fullpath (str ws "/" path)
-                lines (read-nth-line-with-surrounding fullpath line 2)]
-            (info fullpath)
-            (assoc item :lines lines)))
-        (do
-          (info "skip annotate:" line path item)
-          item)))))
+    ;; Location can either have `lines` or `positions` key:
+    ;; https://github.com/codeclimate/spec/blob/master/SPEC.md#locations
+    ;; We support both.
+    (for [{{{{:keys [line]} :begin} :positions {:keys [begin]} :lines path :path} :location :as item} cc]
+      (let [start-line (or line begin)]
+        (if start-line
+          (do
+            (info "annotate:" start-line path)
+            (let [fullpath (str ws "/" path)
+                  lines (read-nth-line-with-surrounding fullpath start-line 2)]
+              (info fullpath)
+              (assoc item :lines lines)))
+          (do
+            (info "skip annotate:" start-line path item)
+            item))))))
 
 (defn extract-base-url [u]
   (let [u (url u)]
