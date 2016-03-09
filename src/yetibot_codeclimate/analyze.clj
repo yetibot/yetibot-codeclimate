@@ -100,7 +100,7 @@
       (let [start-line (or line begin)]
         (if start-line
           (do
-            (info "annotate:" start-line path)
+            #_(info "annotate:" start-line path)
             (let [fullpath (str ws "/" path)
                   lines (read-nth-line-with-surrounding fullpath start-line 2)]
               (info fullpath)

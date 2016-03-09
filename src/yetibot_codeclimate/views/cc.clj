@@ -19,7 +19,8 @@
 
 (defn render-items [analysis base-url owner repo sha]
   (doall (for [{:keys [lines engine_name content categories description location]} analysis]
-           (let [line-number (-> location :positions :begin :line)
+           (let [line-number (or (-> location :positions :begin :line)
+                                 (-> location :lines :begin))
                  column-number (-> location :positions :begin :column)]
              [:div.cc-item
               [:div.cc-content
@@ -35,10 +36,10 @@
                 [:div.col-md-10
                  [:p description]
                  [:pre
-                  (when-let [{:keys [before after line]} lines]
-                    (let [before-count (count before)
+                  (when (and line-number (every? lines [:before :after :line]))
+                    (let [{:keys [before after line]} lines
+                          before-count (count before)
                           after-count (count after)]
-
                       [:span
                        (fmt-lines (- line-number before-count) before)
                        \newline
